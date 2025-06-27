@@ -1,0 +1,39 @@
+version: '3.8'
+
+# This file is for PRODUCTION deployments.
+# It builds a single, optimized image serving both the Angular frontend and the Symfony API.
+#
+# Usage:
+# 1. Create a .env file from .env.dist and fill in your production secrets.
+# 2. Run: docker-compose -f docker-compose.prod.yml up --build -d
+#
+services:
+  app:
+    build:
+      context: . # Build context is the root to access both backend and frontend
+      dockerfile: docker/prod/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # For HTTP/3
+    environment:
+      # This will enable Caddy's automatic HTTPS feature via Let's Encrypt
+      SERVER_NAME: your-domain.com # IMPORTANT: Change to your domain
+      # Load secrets from the .env file
+      APP_SECRET: ${APP_SECRET}
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?serverVersion=16&charset=utf8"
+      MERCURE_JWT_SECRET: ${MERCURE_JWT_SECRET}
+
+  database:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data:rw
+
+volumes:
+  db_data:

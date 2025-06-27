@@ -1,0 +1,54 @@
+version: '3.8'
+
+# This file is intended for LOCAL DEVELOPMENT.
+# It uses volumes to mount your source code for live-reloading.
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8080:80"      # HTTP
+      - "8443:443"     # HTTPS
+      - "443:443/udp"  # HTTP/3
+    environment:
+      # Tells Caddy to listen on this address. For development, ':80' is fine.
+      SERVER_NAME: ':80'
+      # Symfony environment variables
+      APP_ENV: dev
+      APP_SECRET: '!ChangeThisSecret!' # Change this for production
+      # Uncomment and configure if you use a database
+      # DATABASE_URL: "postgresql://app:!ChangeMe!@database:5432/app?serverVersion=16&charset=utf8"
+      # Uncomment for Mercure support
+      # MERCURE_URL: "http://backend/.well-known/mercure"
+      # MERCURE_PUBLIC_URL: "http://localhost:8080/.well-known/mercure"
+      # MERCURE_JWT_SECRET: "!ChangeThisMercureSecret!"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app
+      # Anonymous volume for node_modules to avoid being overwritten by the host mount.
+      - /app/node_modules
+    ports:
+      - "4200:4200"
+
+  # Uncomment if you need a database service
+  # database:
+  #   image: postgres:16-alpine
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: app
+  #     POSTGRES_USER: app
+  #     POSTGRES_PASSWORD: '!ChangeMe!'
+  #   volumes:
+  #     - db_data:/var/lib/postgresql/data:rw
+
+# volumes:
+#   db_data:
