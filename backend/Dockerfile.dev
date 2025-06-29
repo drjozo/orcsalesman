@@ -1,0 +1,23 @@
+# Development Dockerfile for Symfony backend
+FROM dunglas/frankenphp:1.1-php8.3
+
+WORKDIR /app
+
+# Install git for Composer source installs
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Install dev dependencies and xdebug for debugging
+RUN set -eux; \
+    install-php-extensions xdebug; \
+    composer self-update
+
+COPY composer.* ./
+RUN composer install --prefer-dist --no-progress --no-scripts || true
+
+COPY . .
+
+# Expose port for debugging if needed
+EXPOSE 9003

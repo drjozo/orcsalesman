@@ -4,7 +4,7 @@ version: '3.8'
 # It builds a single, optimized image serving both the Angular frontend and the Symfony API.
 #
 # Usage:
-# 1. Create a .env file from .env.dist and fill in your production secrets.
+# 1. Create a .env.prod file from .env.dist and fill in your production secrets.
 # 2. Run: docker-compose -f docker-compose.prod.yml up --build -d
 #
 services:
@@ -17,6 +17,8 @@ services:
       - "80:80"
       - "443:443"
       - "443:443/udp" # For HTTP/3
+    env_file:
+      - .env.prod
     environment:
       # This will enable Caddy's automatic HTTPS feature via Let's Encrypt
       SERVER_NAME: your-domain.com # IMPORTANT: Change to your domain

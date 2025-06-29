@@ -2,6 +2,9 @@
 # It builds the Angular app and then copies the static assets
 # into a final FrankenPHP image that serves both the API and the frontend.
 
+# Stage 0: Get Composer binary
+FROM composer:2.7 AS composer
+
 # Stage 1: Build the Angular frontend
 FROM node:20-alpine AS frontend-builder
 
@@ -27,10 +30,16 @@ FROM dunglas/frankenphp:1.1-php8.3 AS final-build
 WORKDIR /app
 
 # Install required PHP extensions (e.g., for PostgreSQL)
-RUN install-php-extensions pdo_pgsql intl zip
+RUN install-php-extensions pdo_pgsql intl zip ctype iconv tokenizer xml
+
+# Install git for Composer source installs
+RUN apk add --no-cache git
 
 # Copy composer files from the backend directory
-COPY backend/composer.* backend/symfony.lock ./
+COPY backend/composer.* ./
+
+# Copy the Composer binary from the composer stage before running it
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 
 # Install composer dependencies for production (optimizations included)
 RUN set -eux; \
@@ -45,3 +54,9 @@ COPY --from=frontend-builder /app/frontend/dist/frontend/browser/ /app/public/
 
 # Set permissions for the cache and logs directories for Symfony
 RUN chown -R www-data:www-data var
+
+# Expose HTTP, HTTPS, and HTTP/3 ports
+EXPOSE 80 443 443/udp
+
+# Set the default command to run FrankenPHP
+CMD ["frankenphp", "run"]

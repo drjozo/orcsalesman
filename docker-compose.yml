@@ -1,5 +1,3 @@
-version: '3.8'
-
 # This file is intended for LOCAL DEVELOPMENT.
 # It uses volumes to mount your source code for live-reloading.
 
@@ -7,7 +5,7 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     restart: unless-stopped
     volumes:
       - ./backend:/app
@@ -15,6 +13,8 @@ services:
       - "8080:80"      # HTTP
       - "8443:443"     # HTTPS
       - "443:443/udp"  # HTTP/3
+    env_file:
+      - .env.dev
     environment:
       # Tells Caddy to listen on this address. For development, ':80' is fine.
       SERVER_NAME: ':80'
@@ -31,13 +31,15 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     volumes:
       - ./frontend:/app
       # Anonymous volume for node_modules to avoid being overwritten by the host mount.
       - /app/node_modules
     ports:
       - "4200:4200"
+    env_file:
+      - .env.dev
 
   # Uncomment if you need a database service
   # database:
